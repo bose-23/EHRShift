@@ -1,6 +1,6 @@
-# Team 34 - Diabetes Prediction Dashboard
+Diabetes Prediction Dashboard
 
-This repo contains our Assignment 2 pipeline and Streamlit dashboard for diabetes prediction under temporal shift.
+This repo contains pipeline and Streamlit dashboard for diabetes prediction under temporal shift.
 
 The raw CSV files are not tracked here because they are large. Put the dataset files inside `csv/` with their original names. The scripts will generate the rest inside `outputs/`.
 
