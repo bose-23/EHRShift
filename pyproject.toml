@@ -1,0 +1,18 @@
+[project]
+name = "ml"
+version = "0.1.0"
+description = "Assignment 2 clinical prediction pipeline and Streamlit dashboard"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "altair",
+    "imbalanced-learn",
+    "joblib",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "rapidfuzz",
+    "scikit-learn",
+    "seaborn",
+    "streamlit",
+]
