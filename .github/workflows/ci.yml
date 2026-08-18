@@ -24,8 +24,6 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Run a quick smoke script
-        run: python - <<'PY'
-import sys
-print("CI is working on", sys.platform)
-PY
+      - name: Quick smoke test
+        run: |
+          python -c "import sys; print('CI is working on', sys.platform)"
