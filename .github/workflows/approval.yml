@@ -1,0 +1,101 @@
+name: GitHub CMSTP Portal
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      action_type:
+        description: "Action"
+        required: true
+        type: choice
+        options:
+          - CREATE_REQUEST
+          - APPROVE_REQUEST
+
+      jira_ticket:
+        description: "CMSTP Ticket ID"
+        required: false
+        type: string
+
+      business_justification:
+        description: "Business Justification"
+        required: false
+        type: string
+
+      approval_level:
+        description: "Approval Level"
+        required: false
+        type: choice
+        options:
+          - L1
+          - L2
+          - L3
+          - L4
+          - L5
+          - L6
+
+      decision:
+        description: "Approve or Reject"
+        required: false
+        type: choice
+        options:
+          - APPROVED
+          - REJECTED
+
+jobs:
+
+  create-request:
+    if: inputs.action_type == 'CREATE_REQUEST'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Auto Collect Metadata
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Requested By: ${{ github.actor }}"
+          echo "Build Number: 2456"
+
+      - name: Create Jira Ticket
+        run: |
+          echo "Creating CMSTP..."
+          echo "CMSTP-12345 Created"
+
+      - name: Notify Approvers
+        run: |
+          echo "Sending Approval Requests"
+
+      - name: Current Status
+        run: |
+          echo "L1 : PENDING"
+          echo "L2 : PENDING"
+          echo "L3 : PENDING"
+          echo "L4 : PENDING"
+          echo "L5 : PENDING"
+          echo "L6 : PENDING"
+
+  approve-request:
+    if: inputs.action_type == 'APPROVE_REQUEST'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Process Approval
+        run: |
+          echo "Ticket: ${{ inputs.jira_ticket }}"
+          echo "Level : ${{ inputs.approval_level }}"
+          echo "Decision : ${{ inputs.decision }}"
+
+      - name: Update Jira
+        run: |
+          echo "Updating Jira Approval Status"
+
+      - name: Approval Dashboard
+        run: |
+          echo "Approval Matrix"
+          echo "---------------"
+          echo "L1 : APPROVED"
+          echo "L2 : APPROVED"
+          echo "L3 : PENDING"
+          echo "L4 : PENDING"
+          echo "L5 : PENDING"
+          echo "L6 : PENDING"
