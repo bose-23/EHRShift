@@ -1,0 +1,171 @@
+name: CMSTP Automation POC
+
+on:
+  workflow_dispatch:
+    inputs:
+
+      ticket_action:
+        description: "Create or Update CMSTP"
+        required: true
+        type: choice
+        options:
+          - Create
+          - Update
+
+      jira_ticket_id:
+        description: "Existing CMSTP Ticket (Leave blank for Create)"
+        required: false
+        type: string
+
+      deployment_environment:
+        description: "Deployment Environment"
+        required: true
+        type: choice
+        options:
+          - DEV
+          - UAT
+          - PROD
+
+      deployment_window:
+        description: "Deployment Window"
+        required: true
+        type: string
+
+      business_justification:
+        description: "Business Justification"
+        required: true
+        type: string
+
+      rollback_plan:
+        description: "Rollback Plan"
+        required: true
+        type: string
+
+      risk_level:
+        description: "Risk Level"
+        required: true
+        type: choice
+        options:
+          - Low
+          - Medium
+          - High
+
+      l1_approver:
+        description: "L1 Approver"
+        required: true
+        type: string
+
+      l2_approver:
+        description: "L2 Approver"
+        required: true
+        type: string
+
+      l3_approver:
+        description: "L3 Approver"
+        required: true
+        type: string
+
+      l4_approver:
+        description: "L4 Approver"
+        required: true
+        type: string
+
+      l5_approver:
+        description: "L5 Approver"
+        required: true
+        type: string
+
+      l6_approver:
+        description: "L6 Approver"
+        required: true
+        type: string
+
+jobs:
+  cmstp-request:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Auto Gather GitHub Details
+        run: |
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Requested By: ${{ github.actor }}"
+          echo "Workflow Run: ${{ github.run_number }}"
+
+      - name: Simulate Jenkins Build Number
+        run: |
+          echo "BUILD_NUMBER=2456" >> $GITHUB_ENV
+
+      - name: Generate Git Diff
+        run: |
+          git diff HEAD~1 HEAD > git-diff.txt || true
+
+      - name: Generate CMSTP Payload
+        run: |
+
+          cat <<EOF > cmstp_payload.json
+          {
+            "requestType": "${{ inputs.ticket_action }}",
+            "ticketId": "${{ inputs.jira_ticket_id }}",
+            "repository": "${{ github.repository }}",
+            "serviceName": "${{ github.event.repository.name }}",
+            "branch": "${{ github.ref_name }}",
+            "requestedBy": "${{ github.actor }}",
+            "buildNumber": "${{ env.BUILD_NUMBER }}",
+            "environment": "${{ inputs.deployment_environment }}",
+            "deploymentWindow": "${{ inputs.deployment_window }}",
+            "businessJustification": "${{ inputs.business_justification }}",
+            "rollbackPlan": "${{ inputs.rollback_plan }}",
+            "riskLevel": "${{ inputs.risk_level }}",
+            "approvers": {
+              "L1": "${{ inputs.l1_approver }}",
+              "L2": "${{ inputs.l2_approver }}",
+              "L3": "${{ inputs.l3_approver }}",
+              "L4": "${{ inputs.l4_approver }}",
+              "L5": "${{ inputs.l5_approver }}",
+              "L6": "${{ inputs.l6_approver }}"
+            }
+          }
+          EOF
+
+      - name: Display Payload
+        run: |
+          cat cmstp_payload.json
+
+      - name: Simulate Jira Integration
+        run: |
+          if [ "${{ inputs.ticket_action }}" = "Create" ]; then
+            echo "Creating Jira CMSTP Ticket..."
+            echo "CMSTP-12345 Created Successfully"
+          else
+            echo "Updating Jira Ticket ${{ inputs.jira_ticket_id }}"
+          fi
+
+      - name: Attach Git Diff Report
+        run: |
+          echo "Uploading git-diff.txt to Jira"
+
+      - name: Trigger Approval Flow
+        run: |
+          echo "Approval Request Sent"
+          echo "L1 -> ${{ inputs.l1_approver }}"
+          echo "L2 -> ${{ inputs.l2_approver }}"
+          echo "L3 -> ${{ inputs.l3_approver }}"
+          echo "L4 -> ${{ inputs.l4_approver }}"
+          echo "L5 -> ${{ inputs.l5_approver }}"
+          echo "L6 -> ${{ inputs.l6_approver }}"
+
+      - name: Display Approval Dashboard
+        run: |
+          echo "Approval Status"
+          echo "---------------"
+          echo "L1 : APPROVED"
+          echo "L2 : APPROVED"
+          echo "L3 : PENDING"
+          echo "L4 : PENDING"
+          echo "L5 : PENDING"
+          echo "L6 : PENDING"
