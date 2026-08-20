@@ -1,4 +1,4 @@
-name: GitHub CMSTP Portal
+name: CMSTP Approval Demo
 
 on:
   workflow_dispatch:
@@ -12,13 +12,8 @@ on:
           - CREATE_REQUEST
           - APPROVE_REQUEST
 
-      jira_ticket:
-        description: "CMSTP Ticket ID"
-        required: false
-        type: string
-
-      business_justification:
-        description: "Business Justification"
+      ticket_id:
+        description: "Ticket ID"
         required: false
         type: string
 
@@ -35,7 +30,7 @@ on:
           - L6
 
       decision:
-        description: "Approve or Reject"
+        description: "Decision"
         required: false
         type: choice
         options:
@@ -44,58 +39,104 @@ on:
 
 jobs:
 
-  create-request:
-    if: inputs.action_type == 'CREATE_REQUEST'
+  demo:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Auto Collect Metadata
-        run: |
-          echo "Repository: ${{ github.repository }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Requested By: ${{ github.actor }}"
-          echo "Build Number: 2456"
-
-      - name: Create Jira Ticket
-        run: |
-          echo "Creating CMSTP..."
-          echo "CMSTP-12345 Created"
-
-      - name: Notify Approvers
-        run: |
-          echo "Sending Approval Requests"
-
-      - name: Current Status
-        run: |
-          echo "L1 : PENDING"
-          echo "L2 : PENDING"
-          echo "L3 : PENDING"
-          echo "L4 : PENDING"
-          echo "L5 : PENDING"
-          echo "L6 : PENDING"
-
-  approve-request:
-    if: inputs.action_type == 'APPROVE_REQUEST'
-    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Create Request
+        if: inputs.action_type == 'CREATE_REQUEST'
+        run: |
+
+          mkdir -p approvals
+
+          cat > approvals/CMSTP-1001.json << EOF
+          {
+            "ticket":"CMSTP-1001",
+            "L1":"PENDING",
+            "L2":"PENDING",
+            "L3":"PENDING",
+            "L4":"PENDING",
+            "L5":"PENDING",
+            "L6":"PENDING"
+          }
+          EOF
+
+          echo "CMSTP-1001 Created"
+
       - name: Process Approval
+        if: inputs.action_type == 'APPROVE_REQUEST'
         run: |
-          echo "Ticket: ${{ inputs.jira_ticket }}"
-          echo "Level : ${{ inputs.approval_level }}"
-          echo "Decision : ${{ inputs.decision }}"
 
-      - name: Update Jira
-        run: |
-          echo "Updating Jira Approval Status"
+          FILE="approvals/${{ inputs.ticket_id }}.json"
 
-      - name: Approval Dashboard
+          python3 - << PY
+          import json
+
+          file="${FILE}"
+          level="${{ inputs.approval_level }}"
+          decision="${{ inputs.decision }}"
+
+          with open(file) as f:
+              data=json.load(f)
+
+          data[level]=decision
+
+          with open(file,"w") as f:
+              json.dump(data,f,indent=2)
+
+          print("Updated", level, decision)
+          PY
+
+      - name: Display Dashboard
         run: |
-          echo "Approval Matrix"
-          echo "---------------"
-          echo "L1 : APPROVED"
-          echo "L2 : APPROVED"
-          echo "L3 : PENDING"
-          echo "L4 : PENDING"
-          echo "L5 : PENDING"
-          echo "L6 : PENDING"
+
+          FILE="approvals/${{ inputs.ticket_id || 'CMSTP-1001' }}.json"
+
+          if [ -f "$FILE" ]; then
+
+          python3 - << PY
+          import json
+
+          with open("$FILE") as f:
+              d=json.load(f)
+
+          print("")
+          print("===================================")
+          print(d["ticket"], "Approval Dashboard")
+          print("===================================")
+
+          levels=["L1","L2","L3","L4","L5","L6"]
+
+          for lvl in levels:
+              status=d[lvl]
+
+              if status=="APPROVED":
+                  icon="✅"
+              elif status=="REJECTED":
+                  icon="❌"
+              else:
+                  icon="⏳"
+
+              print(f"{lvl:3} {icon} {status}")
+
+          print("")
+
+          if "REJECTED" in [d[x] for x in levels]:
+              print("Overall Status: REJECTED")
+          elif all(d[x]=="APPROVED" for x in levels):
+              print("Overall Status: APPROVED")
+              print("Deployment Allowed ✅")
+          else:
+              for x in levels:
+                  if d[x]=="PENDING":
+                      print("Overall Status: WAITING FOR",x)
+                      break
+          PY
+
+          fi
